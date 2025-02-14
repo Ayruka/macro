@@ -122,10 +122,7 @@ class MacroApp:
             textvariable=self.start_hotkey_var
         )
         self.start_hotkey_combobox.pack(pady=5)
-
-        # Botão para registrar a hotkey de ativação
-        self.register_hotkey_button = ttk.Button(root, text="Registrar Hotkey", command=self.registrar_hotkey)
-        self.register_hotkey_button.pack(pady=5)
+        self.start_hotkey_combobox.bind("<<ComboboxSelected>>", self.registrar_hotkey_automatico)
 
         # Canvas + Scrollbar para rolar as linhas (MacroRows)
         self.canvas = tk.Canvas(root)
@@ -154,7 +151,10 @@ class MacroApp:
 
         self.running = False
         self.loop_started = False  # Flag para indicar se o loop já foi iniciado
-        self.hotkey_registered = False  # Flag para indicar se a hotkey foi registrada
+        self.hotkey_registered = None  # Armazena a hotkey de ativação registrada
+
+        # Registra a hotkey de ativação automaticamente ao iniciar o programa
+        self.registrar_hotkey_automatico()
 
     def on_tecla_selecionada(self, event):
         """Libera edição se 'Digite a tecla...' for selecionado."""
@@ -192,12 +192,15 @@ class MacroApp:
         del self.rows[index]
         self.update_rows()
 
-    def registrar_hotkey(self):
-        """Registra a hotkey escolhida pelo usuário para ativar a macro."""
+    def registrar_hotkey_automatico(self, event=None):
+        """Registra automaticamente a hotkey de ativação quando o usuário seleciona uma opção."""
         hotkey = self.start_hotkey_var.get().strip()
         if hotkey:
             if self.hotkey_registered:
-                keyboard.remove_hotkey(self.hotkey_registered)  # Remove a hotkey anterior
+                try:
+                    keyboard.remove_hotkey(self.hotkey_registered)  # Remove a hotkey anterior
+                except ValueError:
+                    pass  # Ignora se a hotkey já foi removida
             try:
                 self.hotkey_registered = keyboard.add_hotkey(hotkey, self.iniciar_macro, suppress=True)
                 print(f"Hotkey '{hotkey}' registrada com sucesso!")
@@ -291,11 +294,11 @@ class MacroApp:
         self.running = False
         self.start_button.config(state=tk.NORMAL)
         self.stop_button.config(state=tk.DISABLED)
-        keyboard.unhook_all()
+        keyboard.unhook_all()  # Remove todas as hotkeys, exceto a de ativação
         self.loop_started = False
 
         # Re-registra a hotkey de ativação após parar a macro
-        self.registrar_hotkey()
+        self.registrar_hotkey_automatico()
 
 if __name__ == "__main__":
     root = tk.Tk()
