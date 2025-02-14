@@ -110,23 +110,6 @@ class MacroApp:
         )
         self.stop_hotkey_combobox.pack(pady=5)
 
-        # Nova opção: Combobox para hotkey de ATIVAÇÃO da macro
-        self.start_hotkey_label = ttk.Label(root, text="Hotkey para Ativar Macro:")
-        self.start_hotkey_label.pack(pady=5)
-        self.start_hotkey_var = tk.StringVar(value="F12")  # Valor padrão
-        self.start_hotkey_combobox = ttk.Combobox(
-            root,
-            values=["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"],
-            state="readonly",
-            width=20,
-            textvariable=self.start_hotkey_var
-        )
-        self.start_hotkey_combobox.pack(pady=5)
-
-        # Botão para registrar a hotkey de ativação
-        self.register_hotkey_button = ttk.Button(root, text="Registrar Hotkey", command=self.registrar_hotkey)
-        self.register_hotkey_button.pack(pady=5)
-
         # Canvas + Scrollbar para rolar as linhas (MacroRows)
         self.canvas = tk.Canvas(root)
         self.scrollbar = ttk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
@@ -154,7 +137,6 @@ class MacroApp:
 
         self.running = False
         self.loop_started = False  # Flag para indicar se o loop já foi iniciado
-        self.hotkey_registered = False  # Flag para indicar se a hotkey foi registrada
 
     def on_tecla_selecionada(self, event):
         """Libera edição se 'Digite a tecla...' for selecionado."""
@@ -192,18 +174,6 @@ class MacroApp:
         del self.rows[index]
         self.update_rows()
 
-    def registrar_hotkey(self):
-        """Registra a hotkey escolhida pelo usuário para ativar a macro."""
-        hotkey = self.start_hotkey_var.get().strip()
-        if hotkey:
-            if self.hotkey_registered:
-                keyboard.remove_hotkey(self.hotkey_registered)  # Remove a hotkey anterior
-            try:
-                self.hotkey_registered = keyboard.add_hotkey(hotkey, self.iniciar_macro, suppress=True)
-                print(f"Hotkey '{hotkey}' registrada com sucesso!")
-            except ValueError as e:
-                print(f"Erro ao registrar hotkey: {e}")
-
     def iniciar_macro(self):
         """
         Inicia a macro e registra a hotkey de envio.
@@ -231,7 +201,7 @@ class MacroApp:
         # Flood speed: cadência entre mensagens (velocidade do flood)
         try:
             flood_speed = float(self.cadencia_entry.get())
-            if flood_speed < 0.00001:
+            if flood_speed < 0.001:
                 flood_speed = 0.001
         except ValueError:
             flood_speed = 0.001
@@ -293,9 +263,6 @@ class MacroApp:
         self.stop_button.config(state=tk.DISABLED)
         keyboard.unhook_all()
         self.loop_started = False
-
-        # Re-registra a hotkey de ativação após parar a macro
-        self.registrar_hotkey()
 
 if __name__ == "__main__":
     root = tk.Tk()
