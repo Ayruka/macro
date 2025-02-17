@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import pyautogui
 import keyboard
 import time
@@ -52,8 +53,9 @@ class MacroRow:
 class MacroApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Macro de Teclas")
-        self.root.geometry("600x500")
+        self.root.title("MACRO DIVULGADORES RÁDIO HABBLET")
+        self.root.geometry("750x500")
+        self.root.configure(bg="black")
 
         ttk.Label(root, text="Escolha um comando e digite a mensagem:", font=("Arial", 12)).pack(pady=10)
 
@@ -66,8 +68,8 @@ class MacroApp:
 
         # Combobox para selecionar a tecla de envio
         self.tecla_selecionada = tk.StringVar(value="Escolha a tecla")
-        self.tecla_label = ttk.Label(root, text="Escolha a Tecla ou Comando para enviar as mensagens:")
-        self.tecla_label.pack()
+        self.tecla_label = ttk.Label(root, text="Comando para enviar as mensagens:")
+        self.tecla_label.place(x=40, y=50)
         self.tecla_combobox = ttk.Combobox(
             root,
             values=self.atalhos_disponiveis + ["Digite a tecla..."],
@@ -76,26 +78,29 @@ class MacroApp:
             textvariable=self.tecla_selecionada
         )
         self.tecla_combobox.pack()
+        self.tecla_combobox.place(x=40, y=75)  # Exemplo: posição na coordenada (100, 200)
         self.tecla_combobox.bind("<<ComboboxSelected>>", self.on_tecla_selecionada)
 
         # Entrada para a cadência entre mensagens (velocidade do flood)
         self.cadencia_label = ttk.Label(root, text="Cadência entre mensagens (em segundos):")
-        self.cadencia_label.pack(pady=5)
+        self.cadencia_label.place(x=250, y=50)
         self.cadencia_entry = ttk.Entry(root, width=10)
         self.cadencia_entry.insert(0, "0.5")  # Valor padrão para flood speed
-        self.cadencia_entry.pack(pady=5)
+        self.cadencia_entry.place(x=250, y=75)
+        
 
         # Checkbox para ativar o loop de envio
         self.loop_var = tk.BooleanVar(value=False)
         self.loop_checkbox = ttk.Checkbutton(root, text="Ativar Loop de Envio", variable=self.loop_var)
-        self.loop_checkbox.pack(pady=5)
+        self.loop_checkbox.place(x=40, y=105)  # Posiciona o checkbox com place
 
         # Entrada para o intervalo entre execuções da macro (loop interval)
         self.loop_interval_label = ttk.Label(root, text="Intervalo entre execuções da macro (em segundos):")
-        self.loop_interval_label.pack(pady=5)
+        self.loop_interval_label.place(x=400, y=50)  # Posiciona o rótulo com place
+
         self.loop_interval_entry = ttk.Entry(root, width=10)
         self.loop_interval_entry.insert(0, "20")  # Valor padrão para loop interval
-        self.loop_interval_entry.pack(pady=5)
+        self.loop_interval_entry.place(x=400, y=75)  # Posiciona a entrada com place
 
         # Nova opção: Combobox para hotkey de PARADA da macro
         self.stop_hotkey_label = ttk.Label(root, text="Hotkey para Parar Macro:")
@@ -125,14 +130,32 @@ class MacroApp:
         self.start_hotkey_combobox.bind("<<ComboboxSelected>>", self.registrar_hotkey_automatico)
 
         # Canvas + Scrollbar para rolar as linhas (MacroRows)
-        self.canvas = tk.Canvas(root)
+        # Canvas + Scrollbar para rolar as linhas (MacroRows)
+        self.canvas = tk.Canvas(root, bg="lightgray")  # bg só para você visualizar melhor a área
         self.scrollbar = ttk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.scrollbar.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
+
+        # Ajuste aqui as coordenadas e tamanho do Canvas
+        # Exemplo: x=300, y=100, width=300, height=200
+        self.canvas.place(x=300, y=100, width=300, height=200)
+
+        # Posicione a Scrollbar ao lado do Canvas, ajustando coordenadas e altura
+        # Aqui, por exemplo, colocamos x=600 para ficar à direita do Canvas
+        # e definimos a mesma altura (height=200)
+        self.scrollbar.place(x=600, y=100, height=200)
+
         self.messages_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((0, 0), window=self.messages_frame, anchor="nw")
+
+        # Ajusta a área de rolagem quando o frame interno muda de tamanho
         self.messages_frame.bind("<Configure>", lambda e: self.canvas.config(scrollregion=self.canvas.bbox("all")))
+
+        # Função para vincular o scroll do mouse ao canvas
+        def on_mouse_wheel(event):
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        # Bind do evento de scroll do mouse para o Canvas
+        self.canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
         # Lista de linhas (MacroRow)
         self.rows = []
